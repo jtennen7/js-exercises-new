@@ -80,6 +80,10 @@
 
     <h3>Stock Selection Form</h3>
     <div>
+        <!--label>AlphaVantage "Premium" API Key:</label>
+        <input type="text" name="api-key" id="input-api-key" placeholder="demo" value="demo">
+        <br-->
+
         <label>Stock:</label>
         <select id="stock-selector">
             <option value="MSFT" selected>Microsoft (MSFT)</option>
@@ -88,11 +92,16 @@
             <option value="NFLX">Netflix (NFLX)</option>
             <option value="SPOT">Spotify (SPOT)</option>
         </select>
+
+        <!--br>
+        <button id="submit-btn">Update Chart</button-->
     </div>
 
     <h3>Outputs</h3>
 
     <div>
+        <!--p>Selected Stock: <span id="display-stock-symbol">TODO</span></p-->
+        <!--p>Num Days: <span id="display-day-count">TODO</span></p-->
         <p>Date Range:
             <span id="display-earliest-date">TODO</span> to
             <span id="display-latest-date">TODO</span>
@@ -107,6 +116,7 @@
     <div id="dataviz-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <!--script src="https://cdn.plot.ly/plotly-latest.min.js"></script-->
     <script src="https://cdn.plot.ly/plotly-3.0.0.min.js"></script>
     <script type="text/javascript">
 
@@ -120,6 +130,7 @@
 
         // AVOID HARD-CODING THE CREDENTIALS
         // USE SESSION STORAGE TO MINIMIZE THE NUMBER OF TIMES WE HAVE TO PROVIDE THE CREDENTIAL
+
         // sessionStorage.clear()
 
         // check session storage for the API Key:
@@ -131,18 +142,25 @@
             sessionStorage.setItem("ALPHAVANTAGE_API_KEY", apiKey)
         }
 
+        // form elements:
+        var stockSelector = document.getElementById("stock-selector")
 
-        // SELECTORS
-        // TODO
+        // display elements:
+        //var displaySymbol = document.getElementById("display-stock-symbol")
+        var displayEarliestDate = document.getElementById("display-earliest-date")
+        var displayLatestDate = document.getElementById("display-latest-date")
+        var displayEarliestClose = document.getElementById("display-earliest-close")
+        var displayLatestClose = document.getElementById("display-latest-close")
+        var displayPctChange = document.getElementById("display-return")
+        var displayHigh = document.getElementById("display-high")
+        var displayLow = document.getElementById("display-low")
 
-
-
-        // FUNCTION DEFINITION
         function updateDashboard() {
             console.log("--------------------")
 
             // capturing form inputs:
-            var symbol = "NFLX" // TODO: get from drop-down instead
+            //var apiKey = apiKeyInput.value
+            var symbol = stockSelector.value
             console.log("SYMBOL:", symbol)
 
             var requestUrl = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&datatype=csv&symbol=" + symbol + "&apikey=" + apiKey
@@ -153,15 +171,76 @@
                 console.log("---------------------")
                 console.log("PART 1...")
 
+                console.log("DAYS:", data.length)
 
+                var earliest = data[data.length - 1]
+                var latest = data[0]
+                var earliestClose = parseFloat(earliest.adjusted_close)
+                var latestClose = parseFloat(latest.adjusted_close)
+                console.log("EARLIEST:", earliest.timestamp, formatUSD(earliestClose))
+                console.log("LATEST:", latest.timestamp, formatUSD(latestClose))
+
+                var pctChange = (latestClose - earliestClose) / earliestClose
+                console.log("RETURN:", formatPct(pctChange))
+
+                //var latestDate = dates[0]
+                //var earliestDate = dates[dates.length - 1]
+                //console.log("DATE RANGE:", earliestDate, "to", latestDate)
+
+                //var latestClose = prices[0]
+                //var latestCloseUSD = "$" + latestClose.toFixed(2) // formatting the number with dollar sign and rounding to two decimal places
+                //console.log("LATEST CLOSE:", latestCloseUSD)
+
+
+
+                //var dates = data.map(row => row.timestamp)
+                //var prices = data.map(row => parseFloat(row.adjusted_close))
+                //
+                // double-mapping operation for prices and dates
+                // ... b/c we will use these later in the chart in part 2
+                // ... and this single loop is slightly more efficient than two separate loops / two separate mapping operations
+                //
+                var dates = []
+                var prices = []
+                data.forEach(function(row){
+                    dates.push(row.timestamp)
+                    prices.push(parseFloat(row.adjusted_close))
+                })
+                //console.log("DATES:", dates.length)
+                //console.log("PRICES:", prices.length)
+
+                var highPrice = d3.max(prices)
+                var lowPrice = d3.min(prices)
+                console.log("100-DAY HIGH:", formatUSD(highPrice))
+                console.log("100-DAY LOW:", formatUSD(lowPrice))
 
 
 
                 console.log("---------------------")
                 console.log("PART 2...")
 
+                // UPDATING THE PAGE
+                //displaySymbol.innerText = symbol
+                //displayDays.innerText = data.length
+                displayEarliestDate.innerText = earliest.timestamp
+                displayLatestDate.innerText = latest.timestamp
+                displayEarliestClose.innerText = formatUSD(earliestClose)
+                displayLatestClose.innerText = formatUSD(latestClose)
+                displayPctChange.innerText = formatPct(pctChange)
+                displayHigh.innerText = formatUSD(highPrice)
+                displayLow.innerText = formatUSD(lowPrice)
 
-
+                // DATAVIZ
+                // https://plotly.com/javascript/line-charts/
+                var chartData = [
+                    {x: dates, y: prices, mode: "lines+markers"}
+                ]
+                var chartLayout = {
+                    title: {text: `Stock Prices (${symbol})`},
+                    xaxis: {title: {text: "Date"}},
+                    yaxis: {title: {text: "Adjusted Closing Price ($)"}},
+                }
+                Plotly.newPlot("dataviz-container", chartData, chartLayout, {responsive: true})
 
 
             }).catch(function(err){
@@ -170,11 +249,15 @@
             })
         }
 
+        // set api key on page load:
+        //setApiKey()
+
         // trigger an initial chart update when the page loads:
-        //TODO
+        updateDashboard()
 
         // trigger a subsequent chart update whenever the dropdown option is selected:
-        //TODO
+        //myButton.addEventListener("click", updateDashboard, false)
+        stockSelector.addEventListener("change", updateDashboard, false)
 
     </script>
 </body>

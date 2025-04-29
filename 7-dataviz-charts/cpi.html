@@ -76,19 +76,36 @@
             console.log("---------------------")
             console.log("PART 1...")
 
+            console.log("DATASET:", parsedResponse.name)
+            console.log("INTERVAL:", parsedResponse.interval)
 
+            var data = parsedResponse.data
+            console.log(data.length)
 
-
+            var earliest = data[ data.length - 1 ]
+            var latest = data[0]
+            console.log("EARLIEST:", earliest.date)
+            console.log("LATEST:", latest.date)
 
 
 
             console.log("---------------------")
             console.log("PART 2...")
 
+            var dates = data.map(row => row.date)
+            var rates = data.map(row => parseFloat(row.value))
 
-
-
-
+            // DATAVIZ
+            // https://plotly.com/javascript/line-charts/
+            var chartData = [
+                {x: dates, y: rates, mode: "lines+markers"}
+            ]
+            var chartLayout = {
+                title: {text: "US Consumer Price Index (Monthly)"},
+                xaxis: {title: {text: "Month"}},
+                yaxis: {title: {text: "CPI"}},
+            }
+            Plotly.newPlot("dataviz-container", chartData, chartLayout, {responsive: true})
 
 
         }).catch(function(error) {

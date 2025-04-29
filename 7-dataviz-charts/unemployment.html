@@ -86,8 +86,25 @@
             console.log("---------------------")
             console.log("PART 1...")
 
+            console.log("MONTHS:", data.length)
 
+            var earliest = data[ data.length - 1 ]
+            var latest = data[0]
+            console.log("DATE RANGE:", earliest.timestamp, "to", latest.timestamp)
 
+            var dates = data.map(row => row.timestamp)
+            var rates = data.map(row => parseFloat(row.value))
+
+            console.log("ALL TIME...")
+            console.log("MIN:", d3.min(rates))
+            console.log("MAX:", d3.max(rates))
+            console.log("MEAN:", d3.mean(rates))
+
+            var latestRates = rates.slice(0, 12)
+            console.log("LAST 12 MONTHS...")
+            console.log("MIN:", d3.min(latestRates))
+            console.log("MAX:", d3.max(latestRates))
+            console.log("MEAN:", d3.mean(latestRates))
 
 
 
@@ -95,7 +112,17 @@
             console.log("PART 2...")
 
 
-
+            // DATAVIZ
+            // https://plotly.com/javascript/line-charts/
+            var chartData = [
+                {x: dates, y: rates, mode: "lines+markers"}
+            ]
+            var chartLayout = {
+                title: {text: "US Unemployment Rate (Monthly)"},
+                xaxis: {title: {text: "Month"}},
+                yaxis: {title: {text: "Unemployment Rate (%)"}},
+            }
+            Plotly.newPlot("dataviz-container", chartData, chartLayout, {responsive: true})
 
 
 
